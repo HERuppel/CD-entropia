@@ -1,18 +1,53 @@
 // DADOS DE ENTRADA 
 const inputs = {
-  simbolosEProbabilidades: [
-    { simbolo: "A", probabilidade: "2/5"   },
-    { simbolo: "B", probabilidade: "11/32" },
-    { simbolo: "C", probabilidade: "1/8"  }
+  entrada: [
+    { simbolo: "A", probabilidade: "1/3" },
+    { simbolo: "B", probabilidade: "1/3" },
+    { simbolo: "C", probabilidade: "1/3" }
   ],
   matrizInicial: [
-    ["2/9", "3/4", "10/21"],
-    ["1/3", "0",   "2/15" ],
-    ["1",   "0",   "3/14" ]
+    ["2/9", "3/9", "4/9"],
+    ["13/15", "0",   "2/15" ],
+    ["1/14",   "0",   "13/14" ]
   ],
+  saida: [
+    "A", "B", "C"
+  ]
 };
 
 // Funcoes auxiliares
+const converterParaDecimal = (fracao) => {
+  if (!String(fracao).includes("/")) return Number(fracao);
+
+  const [numerador, denominador] = fracao.split("/");
+
+  return Number(numerador) / Number(denominador);
+}
+
+const checarProbabilidadesDeEntrada = () => {
+    const probsEntrada = inputs.entrada.reduce((prev, cur) => converterParaDecimal(prev) + converterParaDecimal(cur.probabilidade), 0)
+
+    if (probsEntrada !== 1) {
+      return false;
+    }
+    return true
+}
+
+const checarLinhasDaMatriz = () => {
+  const somaDasLinhas = Array(inputs.matrizInicial.length);
+
+  inputs.matrizInicial.forEach((linha, i) => {
+    const somaLinha = linha.reduce((prev, cur) => converterParaDecimal(prev) + converterParaDecimal(cur),0)
+    somaDasLinhas[i] = somaLinha
+  })
+
+  const todasAsLinhas = somaDasLinhas.find((item) => item !== 1)
+
+  if (todasAsLinhas !== undefined)
+    return false
+  
+  return true
+}
 
 const matrizProbConjunta = () => {
   let mat = Array(inputs.matrizInicial.length)
@@ -22,18 +57,10 @@ const matrizProbConjunta = () => {
   for (let i = 0; i < inputs.matrizInicial.length ; i++) {
     for (let j = 0; j < inputs.matrizInicial[i].length ; j++) {
       mat[i][j] = converterParaDecimal(inputs.matrizInicial[i][j]) 
-                  * converterParaDecimal(inputs.simbolosEProbabilidades[i].probabilidade);
+                  * converterParaDecimal(inputs.entrada[i].probabilidade);
     }
   }
   return mat;
-}
-
-const converterParaDecimal = (fracao) => {
-  if (!String(fracao).includes("/")) return Number(fracao);
-
-  const [numerador, denominador] = fracao.split("/");
-
-  return Number(numerador) / Number(denominador);
 }
 
 // H(X)
@@ -71,7 +98,7 @@ const entropiaCondicionalYEntrada = () => {
 
   // DEBUG ONLY
   // hCondicionalEntradas.forEach((item, index) => {
-  //   console.log(`H(Y|X = ${inputs.simbolosEProbabilidades[index].simbolo}): ${item.toFixed(2)}`)
+  //   console.log(`H(Y|X = ${inputs.entrada[index].simbolo}): ${item.toFixed(2)}`)
   // })
 
   return hCondicionalEntradas;
@@ -83,7 +110,7 @@ const entropiaCondicionalY = () => {
   let entropiaCond = 0;
 
   entropiaDasEntradas.forEach((item, index) => {
-    entropiaCond += converterParaDecimal(inputs.simbolosEProbabilidades[index].probabilidade) * item
+    entropiaCond += converterParaDecimal(inputs.entrada[index].probabilidade) * item
   })
 
   return Number(entropiaCond.toFixed(2));
@@ -115,6 +142,17 @@ const equivocacaoDoCanal = () => {
   const eqDoCanal = entropiaEntrada - infoMutuaMedia;
 
   return Number(eqDoCanal.toFixed(2));
+}
+
+if (!checarProbabilidadesDeEntrada()) {
+  console.log("A soma das probabilidades de entrada precisa ser igual a 1!");
+  return;
+}
+
+checarLinhasDaMatriz();
+if (!checarLinhasDaMatriz()) {
+  console.log("A soma das linhas da matriz inicial precisa ser igual a 1!")
+  return;
 }
 
 console.log(`H(X): ${entropiaDeEntrada()} sh/símbolo`);
