@@ -6,9 +6,9 @@ const inputs = {
     { simbolo: "C", probabilidade: "1/3" }
   ],
   matrizInicial: [
-    ["2/9", "3/9", "4/9"],
+    ["2/9",   "3/9", "4/9"],
     ["13/15", "0",   "2/15" ],
-    ["1/14",   "0",   "13/14" ]
+    ["1/14",  "0",   "13/14" ]
   ],
   saida: [
     "A", "B", "C"
@@ -47,6 +47,19 @@ const checarLinhasDaMatriz = () => {
     return false
   
   return true
+}
+
+const checarColunasEntradaESaidas = () => {
+  let flag = true;
+
+  inputs.matrizInicial.forEach((innerMatrix) => {
+    if (innerMatrix.length !== inputs.saida.length) {
+      flag = false;
+      return;
+    }
+  });
+
+  return flag;
 }
 
 const matrizProbConjunta = () => {
@@ -149,9 +162,13 @@ if (!checarProbabilidadesDeEntrada()) {
   return;
 }
 
-checarLinhasDaMatriz();
 if (!checarLinhasDaMatriz()) {
   console.log("A soma das linhas da matriz inicial precisa ser igual a 1!")
+  return;
+}
+
+if(!checarColunasEntradaESaidas()) {
+  console.log("O Número de colunas da matriz inicial precisa ser igual ao número de saídas!");
   return;
 }
 
