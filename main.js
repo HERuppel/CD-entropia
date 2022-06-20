@@ -2,20 +2,20 @@
 const inputs = {
   entrada: [
     { simbolo: "A", probabilidade: "1/3" },
-    { simbolo: "B", probabilidade: "1/3" },
-    { simbolo: "C", probabilidade: "1/3" }
+    { simbolo: "B", probabilidade: "16/27" },
+    { simbolo: "C", probabilidade: "2/27" }
   ],
   matrizInicial: [
-    ["2/9",   "3/9", "4/9"],
-    ["13/15", "0",   "2/15" ],
-    ["1/14",  "0",   "13/14" ]
+    ["0", "4/5", "1/5"],
+    ["1/2", "1/2", "0"],
+    ["1/2", "2/5", "1/10"]
   ],
   saida: [
     "A", "B", "C"
   ]
 };
 
-// Funcoes auxiliares
+// Funções auxiliares
 const converterParaDecimal = (fracao) => {
   if (!String(fracao).includes("/")) return Number(fracao);
 
@@ -25,28 +25,28 @@ const converterParaDecimal = (fracao) => {
 }
 
 const checarProbabilidadesDeEntrada = () => {
-    const probsEntrada = inputs.entrada.reduce((prev, cur) => converterParaDecimal(prev) + converterParaDecimal(cur.probabilidade), 0)
+    const probsEntrada = inputs.entrada.reduce((prev, cur) => converterParaDecimal(prev) + converterParaDecimal(cur.probabilidade), 0);
 
-    if (probsEntrada !== 1) {
+    if (Number(probsEntrada.toPrecision(1)) !== 1) {
       return false;
     }
-    return true
+    return true;
 }
 
 const checarLinhasDaMatriz = () => {
   const somaDasLinhas = Array(inputs.matrizInicial.length);
 
   inputs.matrizInicial.forEach((linha, i) => {
-    const somaLinha = linha.reduce((prev, cur) => converterParaDecimal(prev) + converterParaDecimal(cur),0)
-    somaDasLinhas[i] = somaLinha
+    const somaLinha = linha.reduce((prev, cur) => converterParaDecimal(prev) + converterParaDecimal(cur), 0);
+    somaDasLinhas[i] = Number(somaLinha.toPrecision(1));
   })
 
-  const todasAsLinhas = somaDasLinhas.find((item) => item !== 1)
+  const todasAsLinhas = somaDasLinhas.find((item) => item !== 1);
 
   if (todasAsLinhas !== undefined)
-    return false
+    return false;
   
-  return true
+  return true;
 }
 
 const checarColunasEntradaESaidas = () => {
@@ -65,7 +65,7 @@ const checarColunasEntradaESaidas = () => {
 const matrizProbConjunta = () => {
   let mat = Array(inputs.matrizInicial.length)
               .fill(null)
-              .map(() => Array(inputs.matrizInicial[0].length).fill(0));
+              .map(() => Array(inputs.saida.length).fill(0));
 
   for (let i = 0; i < inputs.matrizInicial.length ; i++) {
     for (let j = 0; j < inputs.matrizInicial[i].length ; j++) {
@@ -86,7 +86,7 @@ const entropiaDeEntrada = () => {
   });
 
   let hDeX = 0;
-  probabilidades.forEach((prob, index) => {
+  probabilidades.forEach((prob) => {
     hDeX = hDeX - Math.log2(prob) * prob;
   });
 
@@ -96,35 +96,29 @@ const entropiaDeEntrada = () => {
 // H(Y|X = Entrada)
 const entropiaCondicionalYEntrada = () => {
   let matrizCond = inputs.matrizInicial.map(inner => inner.map(converterParaDecimal));
-  let hCondicionalEntradas = Array(inputs.matrizInicial.length)
-  .fill(0)
+  let hCondicionalEntradas = Array(inputs.matrizInicial.length).fill(0);
 
   matrizCond.forEach((innerMatrix, i) => {
-    innerMatrix.forEach((item, j) => {
+    innerMatrix.forEach((item) => {
       if (item === 0) {
-        return
+        return;
       }
 
       hCondicionalEntradas[i] = hCondicionalEntradas[i] - Math.log2(item) * item;
-    })
+    });
   });
-
-  // DEBUG ONLY
-  // hCondicionalEntradas.forEach((item, index) => {
-  //   console.log(`H(Y|X = ${inputs.entrada[index].simbolo}): ${item.toFixed(2)}`)
-  // })
 
   return hCondicionalEntradas;
 }
 
 // H(Y|X)
 const entropiaCondicionalY = () => {
-  const entropiaDasEntradas = entropiaCondicionalYEntrada()
+  const entropiaDasEntradas = entropiaCondicionalYEntrada();
   let entropiaCond = 0;
 
   entropiaDasEntradas.forEach((item, index) => {
-    entropiaCond += converterParaDecimal(inputs.entrada[index].probabilidade) * item
-  })
+    entropiaCond += converterParaDecimal(inputs.entrada[index].probabilidade) * item;
+  });
 
   return Number(entropiaCond.toFixed(2));
 }
@@ -141,8 +135,8 @@ const entropiaConjunta = () => {
 
 // I(X,Y)
 const informacaoMutuaMedia = () => {
-  const entropiaEntrada = entropiaDeEntrada()
-  const entropiaCond = entropiaCondicionalY()
+  const entropiaEntrada = entropiaDeEntrada();
+  const entropiaCond = entropiaCondicionalY();
   const imm = entropiaEntrada - entropiaCond;
   
   return Number(imm.toFixed(2));
@@ -157,13 +151,15 @@ const equivocacaoDoCanal = () => {
   return Number(eqDoCanal.toFixed(2));
 }
 
+// Checks e execuções
+
 if (!checarProbabilidadesDeEntrada()) {
   console.log("A soma das probabilidades de entrada precisa ser igual a 1!");
   return;
 }
 
 if (!checarLinhasDaMatriz()) {
-  console.log("A soma das linhas da matriz inicial precisa ser igual a 1!")
+  console.log("A soma das linhas da matriz inicial precisa ser igual a 1!");
   return;
 }
 
@@ -174,6 +170,6 @@ if(!checarColunasEntradaESaidas()) {
 
 console.log(`H(X): ${entropiaDeEntrada()} sh/símbolo`);
 console.log(`H(Y|X): ${entropiaCondicionalY()} sh/símbolo`);
-console.log(`H(X,Y): ${entropiaConjunta()} sh/símbolo`)
+console.log(`H(X,Y): ${entropiaConjunta()} sh/símbolo`);
 console.log(`I(X,Y): ${informacaoMutuaMedia()} sh`);
-console.log(`H(X|Y): ${equivocacaoDoCanal()} sh/símbolo`)
+console.log(`H(X|Y): ${equivocacaoDoCanal()} sh/símbolo`);
